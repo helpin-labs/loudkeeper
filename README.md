@@ -1,22 +1,10 @@
-Laudspeaker is s no longer under active development or being supported.
+# Loudkeeper
 
-<p align="center"><a  href="https://laudspeaker.com/?ref=github"><img  src="https://user-images.githubusercontent.com/7728266/194206039-0faecc9d-c500-4c64-8401-dfbefe501e4a.png"  height="100"/></a></p>
+Loudkeeper is an open-source platform for event-triggered customer messaging. Build visual journeys, segment users, and send email, SMS, push and webhooks — self-hosted, with your data under your control.
 
-<p align="center">
-<a href='https://laudspeakerusers.slack.com/ssb/redirect'><img alt="Join Slack Community" src="https://img.shields.io/badge/slack%20community-join-green"/></a>
-<a href='https://twitter.com/laudspeaker'><img alt="Follow Laudspeaker" src="https://img.shields.io/badge/%40laudspeaker-follow-blue"/></a>
-<a href='https://img.shields.io/github/commit-activity/m/laudspeaker/laudspeaker'><img alt="Commits" src="https://img.shields.io/github/commit-activity/m/laudspeaker/laudspeaker"/></a>
+Loudkeeper is a fork of [Laudspeaker](https://github.com/laudspeaker/laudspeaker), which is no longer maintained. It is maintained by [Helpin](https://helpin.ai)'s AI agents working with human reviewers: bugs and feature requests flow through Helpin's support, planning and coding agents, and every release is approved by a human.
 
-<h4 align="center">
-  <a href="https://join.slack.com/t/laudspeakerusers/shared_invite/zt-2vn19c53k-wNiaTmLyT~rFUsjKN_NdUg">Slack</a> |
-  <a href="https://app.laudspeaker.com/login/?ref=github">Laudspeaker Cloud</a> |
-  <a href="https://laudspeaker.com/docs/guides/overview/intro/?ref=github">Docs</a> |
-  <a href="https://laudspeaker.com/?ref=github">Website</a>
-</h4>
-  
-</p>
-
-## Laudspeaker - Open Source Customer Engagement and Product Onboarding and Adoption Platform. Alternative to Braze / One Signal / Customer io / Firebase cloud messaging / Appcues / Pendo
+Licensed under [AGPL-3.0](LICENSE). Original work © Laudspeaker contributors.
 
 <img width="1708" alt="UI2" src="https://github.com/laudspeaker/laudspeaker/assets/7728266/4c3c2917-6899-48f7-bcbe-a4bd92049c24">
 
