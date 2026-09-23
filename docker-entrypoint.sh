@@ -7,7 +7,7 @@ echo "Running clickhouse-migrations"
 clickhouse-migrations migrate
 
 echo "Running Typeorm migrations"
-typeorm-ts-node-commonjs migration:run -d packages/server/src/data-source.ts
+typeorm migration:run -d dist/src/data-source.js
 
 # Web server runs first. All other process types are dependant on the web server container
 if [[ "$1" = 'web' || -z "$1" ]]; then

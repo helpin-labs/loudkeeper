@@ -29,29 +29,33 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d laudspeaker"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
       - laudspeaker_default
 
   pgbouncer:
-    image: bitnami/pgbouncer:1.23.1
+    image: edoburu/pgbouncer:v1.23.1-p3
     container_name: pgbouncer
     hostname: pgbouncer
     environment:
-      - PGBOUNCER_PORT=6432
-      - POSTGRESQL_HOST=postgres
-      - POSTGRESQL_PORT=5432
-      - POSTGRESQL_USERNAME=${POSTGRES_USER:-postgres}
-      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD:-password}
-      - PGBOUNCER_DATABASE=laudspeaker
-      - PGBOUNCER_AUTH_USER=${POSTGRES_USER:-postgres}
-      - PGBOUNCER_AUTH_TYPE=scram-sha-256
-      - PGBOUNCER_POOL_MODE=transaction
-      - PGBOUNCER_MAX_DB_CONNECTIONS=100
-      - PGBOUNCER_MAX_CLIENT_CONN=1000
-      - PGBOUNCER_MIN_POOL_SIZE=5
-      - PGBOUNCER_DEFAULT_POOL_SIZE=100
-      - PGBOUNCER_RESERVE_POOL_SIZE=0
-      - PGBOUNCER_IGNORE_STARTUP_PARAMETERS=lock_timeout,statement_timeout,idle_in_transaction_session_timeout
+      - LISTEN_PORT=6432
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - DB_NAME=laudspeaker
+      - AUTH_TYPE=scram-sha-256
+      - POOL_MODE=transaction
+      - MAX_DB_CONNECTIONS=100
+      - MAX_CLIENT_CONN=1000
+      - MIN_POOL_SIZE=5
+      - DEFAULT_POOL_SIZE=100
+      - RESERVE_POOL_SIZE=0
+      - IGNORE_STARTUP_PARAMETERS=lock_timeout,statement_timeout,idle_in_transaction_session_timeout
     ports:
       - "6432:6432"
     depends_on:
@@ -106,6 +110,12 @@ services:
       - "1883:1883"
       - "15672:15672"
     container_name: rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
     networks:
       - laudspeaker_default
 
@@ -145,6 +155,14 @@ services:
         condition: service_completed_successfully
       s3-createbuckets:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - ./local-env/env-docker-compose
     networks:
@@ -189,16 +207,15 @@ services:
       - laudspeaker_default
 
   s3-createbuckets:
-    image: minio/mc
+    image: quay.io/minio/mc
     depends_on:
       s3:
         condition: service_healthy
     entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add s3 http://s3:9000 test 12345678;
-      /usr/bin/mc mb s3/$$AWS_S3_CUSTOMERS_IMPORT_BUCKET;
-      /usr/bin/mc mb s3/$$AWS_S3_BUCKET;
-      exit 0;
+      /bin/sh -ec "
+      /usr/bin/mc alias set s3 http://s3:9000 test 12345678;
+      /usr/bin/mc mb --ignore-existing s3/$$AWS_S3_CUSTOMERS_IMPORT_BUCKET;
+      /usr/bin/mc mb --ignore-existing s3/$$AWS_S3_BUCKET;
       "
     env_file:
       - ./local-env/env-docker-compose

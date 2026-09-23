@@ -27,9 +27,11 @@ jobs:
       with:
         node-version: 16
     - name: Setup environment
-      # TODO remove the || true from the below run once https://github.com/docker/compose/pull/11649 is merged allowing init containers to exit 0 with --wait-allow-exit over --wait
       run: |
-        LAUDSPEAKER_IMAGE=${{ inputs.image }} docker compose --profile testing up --wait --quiet-pull || true
+        export LAUDSPEAKER_IMAGE=${{ inputs.image }}
+        trap 'docker compose --profile testing ps --all; docker compose --profile testing logs --tail=100' ERR
+        docker compose --profile testing up -d --quiet-pull
+        curl --fail --silent --show-error --output /dev/null --retry 30 --retry-delay 2 --retry-connrefused http://localhost:8080
     - name: Install unit test dependencies
       run: "npm install -w packages/server          \n"
     - name: Run unit tests
