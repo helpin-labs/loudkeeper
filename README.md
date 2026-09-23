@@ -2,6 +2,8 @@
 
 Loudkeeper is an open-source platform for event-triggered customer messaging. Build visual journeys, segment users, and send email, SMS, push and webhooks — self-hosted, with your data under your control.
 
+The product website lives in [website](website/README.md). It is a standalone static site with a product overview and onboarding, activation, and retention use cases.
+
 Loudkeeper is a fork of [Laudspeaker](https://github.com/laudspeaker/laudspeaker), which is no longer maintained. It is maintained by [Helpin](https://helpin.ai)'s AI agents working with human reviewers: bugs and feature requests flow through Helpin's support, planning and coding agents, and every release is approved by a human.
 
 Licensed under [AGPL-3.0](LICENSE). Original work © Laudspeaker contributors.
