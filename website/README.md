@@ -12,15 +12,6 @@ Then open `http://localhost:4173`. The existing product application lives in `pa
 
 ## Cloudflare Pages
 
-Cloudflare Pages can also connect to the GitHub repository and pull the site directly on branch pushes. This is a different deployment trigger from the release workflow below, which runs when a GitHub Release is published. Choose the deployment method before creating the Pages project: Cloudflare does not allow a Direct Upload project to be converted to Git integration later. For Git integration, connect `helpin-labs/loudkeeper`, leave the build command blank, and set the build output directory to `website`.
+Use Cloudflare Pages Git integration to pull the site directly from GitHub. In **Workers & Pages**, create a **Pages** application, connect `helpin-labs/loudkeeper`, and choose `main` as the production branch. Leave the framework preset and build command blank, keep the repository root as the root directory, and set the build output directory to `website`. Cloudflare will publish the site when `main` is pushed. This repository must have a `main` branch before you can select it in Cloudflare.
 
-The website is deployed from [`deploy-website.yml`](../.github/workflows/deploy-website.yml). It publishes `website/` when a GitHub release is published. Its manual `workflow_dispatch` trigger can publish the site for the first time after this workflow is merged into the repository's default branch. On a release, the workflow checks out the release tag, so the deployed files match that release.
-
-One-time setup:
-
-1. Create a **Direct Upload** Cloudflare Pages project named `loudkeeper-website` with production branch `release`. Keep it in the same Cloudflare account as the `useloudkeeper.com` zone.
-2. Create a Cloudflare API token with **Account → Cloudflare Pages → Edit** permission, scoped to that account. Add it to the GitHub repository as `CLOUDFLARE_API_TOKEN`; add the account ID as `CLOUDFLARE_ACCOUNT_ID`.
-3. Run **Publish Loudkeeper website** from the GitHub Actions tab once for the initial deployment. The project will first be available at `loudkeeper-website.pages.dev`.
-4. In **Workers & Pages → loudkeeper-website → Custom domains**, add `useloudkeeper.com`. Cloudflare will create or guide you through the required DNS records and certificate setup. Add `www.useloudkeeper.com` there too if you want the `www` hostname to work.
-
-After setup, publish a GitHub release to deploy that release's website automatically. The site has no Helpin pixel yet; add the project's exact Helpin snippet after the first publication.
+After the first deployment, open the Pages project's **Custom domains** settings and add `useloudkeeper.com`. Add `www.useloudkeeper.com` too if you want that hostname. The site has no Helpin pixel yet; add the project's exact Helpin snippet after the first publication.
