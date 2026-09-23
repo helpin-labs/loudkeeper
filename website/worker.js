@@ -1,4 +1,4 @@
-const HELPIN_PIXEL = (widgetKey) => `
+const helpinPixel = (widgetKey) => `
 <script type="text/javascript">
   (function () {
     window.helpin = window.helpin || function () {
@@ -20,17 +20,13 @@ export default {
   async fetch(request, env) {
     const response = await env.ASSETS.fetch(request);
     const contentType = response.headers.get('content-type') || '';
-
     if (!env.HELPIN_WIDGET_KEY || !contentType.includes('text/html')) {
       return response;
     }
-
-    return new HTMLRewriter()
-      .on('body', {
-        element(element) {
-          element.append(HELPIN_PIXEL(env.HELPIN_WIDGET_KEY), { html: true });
-        },
-      })
-      .transform(response);
+    return new HTMLRewriter().on('body', {
+      element(element) {
+        element.append(helpinPixel(env.HELPIN_WIDGET_KEY), { html: true });
+      },
+    }).transform(response);
   },
 };

@@ -37,6 +37,7 @@ ENV ENVIRONMENT=production
 ENV SERVE_CLIENT_FROM_NEST=true
 ENV CLIENT_PATH=/app/client
 ENV PATH /app/node_modules/.bin:$PATH
+ENV NODE_PATH=/app/packages/server/node_modules
 ENV FRONTEND_URL=${EXTERNAL_URL}
 ENV POSTHOG_HOST=https://app.posthog.com
 ENV NODE_OPTIONS=--max-old-space-size=2560
