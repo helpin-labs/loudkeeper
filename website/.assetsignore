@@ -1,6 +1,8 @@
-README.md
-wrangler.jsonc
+node_modules/
+.wrangler/
 .assetsignore
+worker.js
+wrangler.jsonc
 package.json
 package-lock.json
-node_modules/
+README.md
