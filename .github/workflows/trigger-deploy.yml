@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag of laudspeaker/laudspeaker image to deploy
+        description: Tag of ghcr.io/helpin-labs/loudkeeper image to deploy
         required: true
         type: string
       env:
@@ -18,7 +18,7 @@ jobs:
     name: Redeploy staging
     uses: ./.github/workflows/deploy.yml
     with:
-      image-repository: laudspeaker/laudspeaker
+      image-repository: ghcr.io/helpin-labs/loudkeeper
       image-tag: ${{ inputs.tag }}
       env: ${{ inputs.env }}
     secrets: inherit
