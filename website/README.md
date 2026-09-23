@@ -10,8 +10,8 @@ python3 -m http.server 4173 --directory website
 
 Then open `http://localhost:4173`. The existing product application lives in `packages/client/` and is separate from this site.
 
-## Cloudflare Pages
+## Cloudflare Workers
 
-Use Cloudflare Pages Git integration to pull the site directly from GitHub. In **Workers & Pages**, create a **Pages** application, connect `helpin-labs/loudkeeper`, and choose `main` as the production branch. Leave the framework preset and build command blank, keep the repository root as the root directory, and set the build output directory to `website`. Cloudflare will publish the site when `main` is pushed. This repository must have a `main` branch before you can select it in Cloudflare.
+The [`wrangler.jsonc`](wrangler.jsonc) in this directory deploys the site as static assets, with no server-side Worker code. In **Workers & Pages**, connect a **Worker** to `helpin-labs/loudkeeper` and select `main` for production. Set **Root directory** to `website`, leave **Build command** blank, and set **Deploy command** to `npx wrangler deploy`. Name the Worker `loudkeeper-website` to match the Wrangler configuration. This isolates the static site from the repository root's npm workspaces and lockfile. Cloudflare will publish the site when `main` is pushed.
 
-After the first deployment, open the Pages project's **Custom domains** settings and add `useloudkeeper.com`. Add `www.useloudkeeper.com` too if you want that hostname. The site has no Helpin pixel yet; add the project's exact Helpin snippet after the first publication.
+After the first deployment, add `useloudkeeper.com` as a custom domain on the Worker. Add `www.useloudkeeper.com` too if you want that hostname. The site has no Helpin pixel yet; add the project's exact Helpin snippet after the first publication.
