@@ -12,6 +12,8 @@ Then open `http://localhost:4173`. The existing product application lives in `pa
 
 ## Cloudflare Pages
 
+Cloudflare Pages can also connect to the GitHub repository and pull the site directly on branch pushes. This is a different deployment trigger from the release workflow below, which runs when a GitHub Release is published. Choose the deployment method before creating the Pages project: Cloudflare does not allow a Direct Upload project to be converted to Git integration later. For Git integration, connect `helpin-labs/loudkeeper`, leave the build command blank, and set the build output directory to `website`.
+
 The website is deployed from [`deploy-website.yml`](../.github/workflows/deploy-website.yml). It publishes `website/` when a GitHub release is published. Its manual `workflow_dispatch` trigger can publish the site for the first time after this workflow is merged into the repository's default branch. On a release, the workflow checks out the release tag, so the deployed files match that release.
 
 One-time setup:
