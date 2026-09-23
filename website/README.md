@@ -12,6 +12,6 @@ Then open `http://localhost:4173`. The existing product application lives in `pa
 
 ## Cloudflare Workers
 
-The root [`wrangler.jsonc`](../wrangler.jsonc) deploys `website/` as static assets, with no server-side Worker code. In **Workers & Pages**, create a **Worker** connected to `helpin-labs/loudkeeper` and select `main` for production. Keep the root directory at the repository root, leave **Build command** blank, and set **Deploy command** to `npx wrangler deploy`. Name the Worker `loudkeeper-website` to match the Wrangler configuration. Cloudflare will publish the site when `main` is pushed.
+The [`wrangler.jsonc`](wrangler.jsonc) in this directory deploys the site as static assets, with no server-side Worker code. In **Workers & Pages**, connect a **Worker** to `helpin-labs/loudkeeper` and select `main` for production. Set **Root directory** to `website`, leave **Build command** blank, and set **Deploy command** to `npx wrangler deploy`. Name the Worker `loudkeeper-website` to match the Wrangler configuration. This isolates the static site from the repository root's npm workspaces and lockfile. Cloudflare will publish the site when `main` is pushed.
 
 After the first deployment, add `useloudkeeper.com` as a custom domain on the Worker. Add `www.useloudkeeper.com` too if you want that hostname. The site has no Helpin pixel yet; add the project's exact Helpin snippet after the first publication.
