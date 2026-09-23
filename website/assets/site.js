@@ -1,0 +1,15 @@
+const root = document.querySelector('[data-site-header]');
+const footer = document.querySelector('[data-site-footer]');
+const current = window.location.pathname.split('/').pop() || 'index.html';
+const github = 'https://github.com/helpin-labs/loudkeeper';
+const brand = `<a class="brand" href="./index.html" aria-label="Loudkeeper home"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 13.5c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M3 17.5c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span>Loudkeeper</a>`;
+const links = [['Product','product.html'],['Use cases','use-cases.html']];
+const navLink = ([label,href]) => `<a href="./${href}" ${current === href || (href === 'use-cases.html' && current.startsWith('use-case-')) ? 'aria-current="page"' : ''}>${label}</a>`;
+if (root) root.innerHTML = `<div class="site-header"><div class="container nav-wrap">${brand}<nav class="desktop-nav" aria-label="Main navigation">${links.map(navLink).join('')}<a href="${github}#readme">Get started</a></nav><a class="nav-github" href="${github}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.25.77-.54v-2.1c-3.14.68-3.8-1.33-3.8-1.33-.5-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.69.08-.69 1.13.08 1.73 1.16 1.73 1.16 1 .1.77 2.02 3.27 1.44.1-.73.39-1.22.71-1.5-2.5-.28-5.14-1.25-5.14-5.58 0-1.23.44-2.24 1.16-3.03-.11-.28-.5-1.43.11-2.98 0 0 .95-.3 3.08 1.16a10.7 10.7 0 0 1 5.6 0c2.13-1.45 3.08-1.16 3.08-1.16.61 1.55.22 2.7.1 2.98.73.79 1.16 1.8 1.16 3.03 0 4.34-2.64 5.3-5.15 5.58.4.35.75 1.03.75 2.08v3.07c0 .3.2.65.78.54A11.2 11.2 0 0 0 12 .8Z"/></svg>GitHub ↗</a><details class="mobile-nav"><summary>Menu <span aria-hidden="true">☰</span></summary><nav class="mobile-menu" aria-label="Mobile navigation">${links.map(navLink).join('')}<a href="${github}#readme">Get started</a><a href="${github}">GitHub ↗</a></nav></details></div></div>`;
+if (footer) footer.innerHTML = `<div class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-brand">${brand}<p>Thoughtful customer messaging, on your own terms.</p></div><div class="footer-col"><h4>Explore</h4><a href="./product.html">Product</a><a href="./use-cases.html">Use cases</a></div><div class="footer-col"><h4>Use cases</h4><a href="./use-case-onboarding.html">Onboarding</a><a href="./use-case-activation.html">Activation</a><a href="./use-case-retention.html">Retention</a></div><div class="footer-col"><h4>Project</h4><a href="${github}">GitHub</a><a href="${github}#readme">Get started</a><a href="${github}/blob/main/LICENSE">License</a></div></div><div class="footer-bottom"><span>© ${new Date().getFullYear()} Loudkeeper contributors</span><span>Open source customer messaging · AGPL-3.0</span></div></div></div>`;
+document.querySelectorAll('.mobile-menu a').forEach((link) => {
+  link.addEventListener('click', () => {
+    const menu = link.closest('details');
+    if (menu) menu.open = false;
+  });
+});
