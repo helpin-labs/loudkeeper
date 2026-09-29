@@ -3,23 +3,29 @@ on:
   workflow_call:
     inputs:
       image:
-        description: Name of docker image built by build job
-        default: laudspeaker
+        description: Local image name or remote image reference to test
         required: true
         type: string
+      load_artifact:
+        description: Download and load an image tar artifact before testing
+        default: true
+        required: false
+        type: boolean
 jobs:
   test:
-    name: Load and test docker image
+    name: Test docker image
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Download artifact
+      if: inputs.load_artifact
       uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.image }}
         path: /tmp
     - name: Load image
+      if: inputs.load_artifact
       run: |
         docker load --input /tmp/${{ inputs.image }}.tar
     - name: Setup node
@@ -28,7 +34,7 @@ jobs:
         node-version: 16
     - name: Setup environment
       run: |
-        export LAUDSPEAKER_IMAGE=${{ inputs.image }}
+        export LAUDSPEAKER_IMAGE="${{ inputs.image }}"
         trap 'docker compose --profile testing ps --all; docker compose --profile testing logs --tail=100' ERR
         docker compose --profile testing up -d --quiet-pull
         curl --fail --silent --show-error --output /dev/null --retry 30 --retry-delay 2 --retry-connrefused http://localhost:8080

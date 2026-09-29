@@ -10,11 +10,11 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       dockerfile: Dockerfile
-      output: laudspeaker
-      external_url: app-staging.laudspeaker.com
+      output: loudkeeper
+      external_url: app.loudkeeper.ai
   test-pr:
     needs: [build-pr]
     name: Test docker image
     uses: ./.github/workflows/test.yml
     with:
-      image: laudspeaker
+      image: loudkeeper
