@@ -89,7 +89,9 @@ metadata:
 spec:
   serviceName: rabbitmq-headless
   replicas: 3
-  podManagementPolicy: OrderedReady
+  # All statically configured peers must exist before the first node can form
+  # the cluster. OrderedReady deadlocks while rabbitmq-0 waits for nodes 1/2.
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       app.kubernetes.io/name: rabbitmq
@@ -158,17 +160,20 @@ spec:
               memory: 1Gi
           startupProbe:
             exec:
-              command: ["rabbitmq-diagnostics", "-q", "ping"]
-            periodSeconds: 5
+              command: ["rabbitmq-diagnostics", "-q", "check_running"]
+            timeoutSeconds: 10
+            periodSeconds: 10
             failureThreshold: 60
           readinessProbe:
             exec:
               command: ["rabbitmq-diagnostics", "-q", "check_running"]
+            timeoutSeconds: 10
             periodSeconds: 10
             failureThreshold: 6
           livenessProbe:
             exec:
               command: ["rabbitmq-diagnostics", "-q", "ping"]
+            timeoutSeconds: 10
             periodSeconds: 20
             failureThreshold: 3
           volumeMounts:
