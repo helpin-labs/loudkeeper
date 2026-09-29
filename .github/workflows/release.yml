@@ -6,6 +6,7 @@ on:
       - staging
     paths-ignore:
       - "**.md"
+      - "k8s/**"
   release:
     types: [published]
 
@@ -145,30 +146,30 @@ jobs:
       - name: Checkout staging manifests
         uses: actions/checkout@v4
         with:
-          repository: usermaven/kubernetes-manifests-staging
-          ref: main
-          token: ${{ secrets.CI_PAT }}
-          path: manifests
+          ref: staging
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: deploy
 
-      - name: Update image and push manifest
+      - name: Pin the published RC in the Kustomization
         env:
           TAG: ${{ needs.metadata.outputs.tag }}
         run: |
-          FILE=manifests/loudkeeper/deployment.yaml
-          sed -i "s|ghcr.io/helpin-labs/loudkeeper:[^[:space:]]*|${IMAGE}:${TAG}|g" "$FILE"
-          git -C manifests config user.name "github-actions[bot]"
-          git -C manifests config user.email "github-actions[bot]@users.noreply.github.com"
-          git -C manifests add loudkeeper/deployment.yaml
-          if git -C manifests diff --cached --quiet; then
+          FILE=deploy/k8s/stage/kustomization.yaml
+          sed -i "s|newTag: .*|newTag: ${TAG}|" "$FILE"
+          git -C deploy config user.name "github-actions[bot]"
+          git -C deploy config user.email "github-actions[bot]@users.noreply.github.com"
+          git -C deploy add k8s/stage/kustomization.yaml
+          if git -C deploy diff --cached --quiet; then
             echo "Staging already uses $TAG"
             exit 0
           fi
-          git -C manifests commit -m "chore: deploy loudkeeper $TAG to staging"
+          git -C deploy commit -m "chore: deploy loudkeeper $TAG to staging [skip ci]"
           for attempt in 1 2 3 4 5; do
-            if git -C manifests pull --rebase origin main && git -C manifests push origin HEAD:main; then
+            if git -C deploy pull --rebase origin staging && git -C deploy push origin HEAD:staging; then
               exit 0
             fi
-            git -C manifests rebase --abort 2>/dev/null || true
+            git -C deploy rebase --abort 2>/dev/null || true
             sleep $((attempt * 5))
           done
           echo "Could not update the staging manifest" >&2

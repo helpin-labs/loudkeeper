@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loudkeeper
+  namespace: loudkeeper
+  labels:
+    app: loudkeeper
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: loudkeeper
+  template:
+    metadata:
+      labels:
+        app: loudkeeper
+        env: stage
+    spec:
+      nodeSelector:
+        node.hetzner.com/type: cloud
+      containers:
+        - name: web
+          image: ghcr.io/helpin-labs/loudkeeper
+          envFrom:
+            - configMapRef:
+                name: loudkeeper-config
+            - secretRef:
+                name: loudkeeper-secrets
+          env:
+            - name: RUN_MIGRATIONS
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            failureThreshold: 120
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 20
+            failureThreshold: 3
+
+        - name: queue
+          image: ghcr.io/helpin-labs/loudkeeper
+          args: ["queue"]
+          envFrom:
+            - configMapRef:
+                name: loudkeeper-config
+            - secretRef:
+                name: loudkeeper-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "find /tmp/laudspeaker-healthcheck-queue -mmin -1 | grep -q ."]
+            periodSeconds: 5
+            failureThreshold: 120
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "find /tmp/laudspeaker-healthcheck-queue -mmin -1 | grep -q ."]
+            periodSeconds: 20
+            failureThreshold: 3
+
+        - name: cron
+          image: ghcr.io/helpin-labs/loudkeeper
+          args: ["cron"]
+          envFrom:
+            - configMapRef:
+                name: loudkeeper-config
+            - secretRef:
+                name: loudkeeper-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          startupProbe:
+            exec:
+              command: ["sh", "-c", "find /tmp/laudspeaker-healthcheck-cron -mmin -1 | grep -q ."]
+            periodSeconds: 5
+            failureThreshold: 120
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "find /tmp/laudspeaker-healthcheck-cron -mmin -1 | grep -q ."]
+            periodSeconds: 20
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loudkeeper
+  namespace: loudkeeper
+spec:
+  selector:
+    app: loudkeeper
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
