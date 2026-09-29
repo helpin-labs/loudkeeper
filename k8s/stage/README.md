@@ -29,9 +29,24 @@ in `env-server-example` and `local-env/env-docker-compose`, including:
 - `RMQ_CONNECTION_URI`, using the same RabbitMQ username and password and the
   `rabbitmq:5672` service address
 - `CLICKHOUSE_PASSWORD`
-- `JWT_KEY` and `JWT_EXPIRES`
-- `MINIO_S3_URL`, `AWS_S3_BUCKET`, `AWS_S3_CUSTOMERS_IMPORT_BUCKET`,
+- `JWT_KEY`
+- `POSTHOG_KEY`
+- `AWS_S3_BUCKET`, `AWS_S3_CUSTOMERS_IMPORT_BUCKET`, `AWS_S3_BUCKET_REGION`,
   `AWS_S3_ACCESS_KEY`, and `AWS_S3_KEY_SECRET`
+- `MINIO_S3_URL` only when using a non-AWS S3-compatible provider
+
+Copy and fill `secrets.local.yaml`. Git ignores this plaintext file. After the
+values are complete, seal it against the staging cluster and add the encrypted
+result to this Kustomization:
+
+```sh
+kubeseal \
+  --controller-name sealed-secrets-controller \
+  --controller-namespace kube-system \
+  --format yaml \
+  < k8s/stage/secrets.local.yaml \
+  > k8s/stage/sealed-secret.yaml
+```
 
 Object storage remains external. Loudkeeper uses the main bucket for media
 uploaded through the account API and the customer-import bucket for source CSV

@@ -49,6 +49,11 @@ spec:
                 secretKeyRef:
                   name: loudkeeper-postgres-app
                   key: password
+            - name: CH_MIGRATIONS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loudkeeper-secrets
+                  key: CLICKHOUSE_PASSWORD
           ports:
             - name: http
               containerPort: 8080

@@ -13,6 +13,7 @@ data:
   FRONTEND_URL: https://app.loudkeeper.ai
   WS_BASE_URL: https://app.loudkeeper.ai
   SENTRY_ENVIRONMENT_TAG: staging
+  JWT_EXPIRES: 365d
   DATABASE_HOST: loudkeeper-postgres-rw
   DATABASE_NAME: loudkeeper
   DATABASE_USER: loudkeeper
@@ -21,6 +22,7 @@ data:
   DATABASE_MAX_CONNECTIONS: "50"
   REDIS_HOST: redis
   REDIS_PORT: "6379"
+  POSTHOG_HOST: https://app.posthog.com
   CLICKHOUSE_HOST: clickhouse:8123
   CLICKHOUSE_USER: loudkeeper
   CLICKHOUSE_DB: default
