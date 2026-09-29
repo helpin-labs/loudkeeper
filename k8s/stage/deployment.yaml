@@ -30,6 +30,7 @@ spec:
             - -ec
             - |
               until nc -z loudkeeper-postgres-rw 5432; do sleep 2; done
+              until nc -z redis 6379; do sleep 2; done
               until nc -z rabbitmq 5672; do sleep 2; done
               until wget -qO- http://clickhouse:8123/ping | grep -q Ok; do sleep 2; done
       containers:

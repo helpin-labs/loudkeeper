@@ -11,11 +11,12 @@ The Kustomization provisions these app-specific data services:
 
 - A three-instance CloudNativePG PostgreSQL 18 cluster. CNPG generates the
   `loudkeeper-postgres-app` application credential secret.
+- A single-node Redis 7.4 instance with AOF persistence.
 - A three-node RabbitMQ 4.3 cluster using persistent volumes and quorum queues.
 - A single-replica, persistent ClickHouse installation managed by the Altinity
   operator.
 
-All three use the `hcloud-volumes-retain` storage class so an accidental Argo
+All four use the `hcloud-volumes-retain` storage class so an accidental Argo
 prune does not delete the underlying data volumes.
 
 The namespace must contain a `loudkeeper-secrets` secret with the remaining
@@ -23,7 +24,7 @@ runtime configuration. PostgreSQL connection settings and service addresses
 are managed by the manifests. At a minimum, configure the variables documented
 in `env-server-example` and `local-env/env-docker-compose`, including:
 
-- `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD`
+- `REDIS_PASSWORD` with a non-empty value
 - `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`, and `RABBITMQ_ERLANG_COOKIE`
 - `RMQ_CONNECTION_URI`, using the same RabbitMQ username and password and the
   `rabbitmq:5672` service address
@@ -31,6 +32,11 @@ in `env-server-example` and `local-env/env-docker-compose`, including:
 - `JWT_KEY` and `JWT_EXPIRES`
 - `MINIO_S3_URL`, `AWS_S3_BUCKET`, `AWS_S3_CUSTOMERS_IMPORT_BUCKET`,
   `AWS_S3_ACCESS_KEY`, and `AWS_S3_KEY_SECRET`
+
+Object storage remains external. Loudkeeper uses the main bucket for media
+uploaded through the account API and the customer-import bucket for source CSV
+files and generated import error reports. `MINIO_S3_URL` can point to any
+S3-compatible service; omit it when using AWS S3 directly.
 
 MongoDB is not required for a new deployment. Its only active reference is an
 old MongoDB-to-ClickHouse data migration, which safely skips when MongoDB is not
