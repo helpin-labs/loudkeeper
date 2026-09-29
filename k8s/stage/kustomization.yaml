@@ -14,4 +14,4 @@ resources:
 
 images:
   - name: ghcr.io/helpin-labs/loudkeeper
-    newTag: stage-latest
+    newTag: v1.5.1-rc.1
