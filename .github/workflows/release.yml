@@ -108,6 +108,7 @@ jobs:
           file: Dockerfile
           push: true
           build-args: EXTERNAL_URL=app.loudkeeper.ai
+          labels: org.opencontainers.image.source=https://github.com/helpin-labs/loudkeeper
           tags: |
             ${{ env.IMAGE }}:${{ needs.metadata.outputs.tag }}
             ${{ env.IMAGE }}:stage-latest
