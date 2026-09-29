@@ -1,64 +1,29 @@
 #!/usr/bin/env bash
-# Resolve the next prerelease (release candidate) version for one artifact.
-#
-# Git tags are the single source of truth, exactly as in the stable resolver.
-# The `develop` lane calls this to publish `-rc.N` prereleases.
-#
-# usage: resolve-rc-version.sh <prefix> <changed>
-#
-#   <prefix>   artifact tag prefix, e.g. "server" -> server-v1.4.3-rc.2
-#   <changed>  "true" when the workflow's path filter saw this artifact change
-#
-# Output (same contract as resolve-release-version.sh):
-#   tag=<tag>    next prerelease tag, or empty when there is nothing to release
-#   prev=<tag>   latest *stable* tag before the release, or empty
-#
-# An empty `tag=` is a "skip", not an error, so re-running is always safe.
+# Print the next reachable RC tag for this single-image repository.
+# usage: resolve-rc-version.sh
 set -euo pipefail
 
-prefix="${1:?usage: resolve-rc-version.sh <prefix> <changed>}"
-changed="${2:?usage: resolve-rc-version.sh <prefix> <changed>}"
+head_sha=$(git rev-parse HEAD)
+latest_stable=$(git tag --merged HEAD -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' | head -n1 || true)
+if [[ -n "$latest_stable" ]]; then
+  IFS=. read -r major minor patch <<< "${latest_stable#v}"
+  base="v${major}.${minor}.$((patch + 1))"
+else
+  base=v0.1.0
+fi
 
-if [ "$changed" != "true" ]; then
-  echo "tag="
-  echo "prev="
+latest_rc=$(git tag --merged HEAD -l "${base}-rc.*" --sort=-v:refname | grep -E "^${base//./\.}-rc\.(0|[1-9][0-9]*)$" | head -n1 || true)
+if [[ -n "$latest_rc" && "$(git rev-list -n1 "refs/tags/$latest_rc")" == "$head_sha" ]]; then
+  printf 'tag=\nprev=%s\n' "$latest_stable"
+  exit 0
+fi
+if [[ -n "$latest_stable" && "$(git rev-list -n1 "refs/tags/$latest_stable")" == "$head_sha" ]]; then
+  printf 'tag=\nprev=%s\n' "$latest_stable"
   exit 0
 fi
 
-# Latest stable tag on this artifact's line; prereleases are excluded so the RC
-# base advances only when a stable release lands. Version-aware sort, never
-# lexical.
-prev_stable="$(git tag -l "${prefix}-v*" --sort=-v:refname | grep -vE '\-(rc|dev)\.' | head -n1 || true)"
-
-# Next RC base: one patch above the latest stable, or the first release on the
-# line when nothing stable exists yet.
-if [ -n "$prev_stable" ]; then
-  version="${prev_stable#${prefix}-v}"
-  IFS='.' read -r major minor patch <<< "$version"
-  major="${major:-0}"; minor="${minor:-0}"; patch="${patch:-0}"
-  base="${prefix}-v${major}.${minor}.$((patch + 1))"
-else
-  base="${prefix}-v0.1.0"
+next=1
+if [[ -n "$latest_rc" ]]; then
+  next=$(( ${latest_rc##*.} + 1 ))
 fi
-
-# RC numbering is unbounded and advances past the highest existing RC for this
-# base (rc.1, rc.2, ...). Version-aware sort picks the highest rc.N.
-highest_rc="$(git tag -l "${base}-rc.*" --sort=-v:refname | head -n1 || true)"
-if [ -n "$highest_rc" ]; then
-  n="${highest_rc##*-rc.}"
-  n=$((n + 1))
-else
-  n=1
-fi
-
-rc_tag="${base}-rc.${n}"
-
-# Idempotency guard: a release that already exists is a no-op, not a failure.
-if git rev-parse "$rc_tag" >/dev/null 2>&1; then
-  echo "tag="
-  echo "prev=$prev_stable"
-  exit 0
-fi
-
-echo "tag=$rc_tag"
-echo "prev=$prev_stable"
+printf 'tag=%s-rc.%s\nprev=%s\n' "$base" "$next" "$latest_stable"
