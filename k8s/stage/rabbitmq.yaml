@@ -18,9 +18,9 @@ data:
     cluster_partition_handling = pause_minority
 
     cluster_formation.peer_discovery_backend = classic_config
+    # A stable seed lets OrderedReady bootstrap rabbitmq-0 before creating the
+    # remaining replicas. Persisted nodes retain their cluster membership.
     cluster_formation.classic_config.nodes.1 = rabbit@rabbitmq-0.rabbitmq-headless.loudkeeper.svc.cluster.local
-    cluster_formation.classic_config.nodes.2 = rabbit@rabbitmq-1.rabbitmq-headless.loudkeeper.svc.cluster.local
-    cluster_formation.classic_config.nodes.3 = rabbit@rabbitmq-2.rabbitmq-headless.loudkeeper.svc.cluster.local
 
     vm_memory_high_watermark.absolute = 700MiB
     disk_free_limit.absolute = 1GB
@@ -89,9 +89,7 @@ metadata:
 spec:
   serviceName: rabbitmq-headless
   replicas: 3
-  # All statically configured peers must exist before the first node can form
-  # the cluster. OrderedReady deadlocks while rabbitmq-0 waits for nodes 1/2.
-  podManagementPolicy: Parallel
+  podManagementPolicy: OrderedReady
   selector:
     matchLabels:
       app.kubernetes.io/name: rabbitmq
