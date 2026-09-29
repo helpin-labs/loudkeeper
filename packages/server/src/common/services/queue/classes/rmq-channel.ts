@@ -15,7 +15,10 @@ export class RMQChannel {
   async init() {
     // this.logger.verbose("RMQ: Opening Channel");
 
-    this.channel = await this.connection.connection.createChannel();
+    // Publisher confirms are required for quorum queues to acknowledge a
+    // publish only after the message has been replicated to a majority.
+    // Confirm channels also support consumers and manual acknowledgements.
+    this.channel = await this.connection.connection.createConfirmChannel();
   }
 
   async close() {

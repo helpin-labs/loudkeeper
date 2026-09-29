@@ -34,9 +34,12 @@ export class MessageProcessor extends ProcessorBase {
   private MAXIMUM_PUSH_LENGTH = 256;
   private MAXIMUM_PUSH_TITLE_LENGTH = 48;
   private tagEngine = new Liquid();
-  private phClient = new PostHog(process.env.POSTHOG_KEY, {
-    host: process.env.POSTHOG_HOST,
-  });
+  private phClient =
+    process.env.POSTHOG_KEY && process.env.POSTHOG_MESSAGE_COUNT !== 'false'
+      ? new PostHog(process.env.POSTHOG_KEY, {
+          host: process.env.POSTHOG_HOST,
+        })
+      : undefined;
   private messagesMap: Record<
     MessageType,
     (job: Job<any, any, string>) => Promise<void>
@@ -309,7 +312,7 @@ export class MessageProcessor extends ProcessorBase {
           break;
       }
       if (job.data.trackingEmail) {
-        this.phClient.capture({
+        this.phClient?.capture({
           distinctId: job.data.trackingEmail,
           event: 'message_sent',
           properties: {
@@ -408,7 +411,7 @@ export class MessageProcessor extends ProcessorBase {
         job.data.session
       );
       if (job.data.trackingEmail) {
-        this.phClient.capture({
+        this.phClient?.capture({
           distinctId: job.data.trackingEmail,
           event: 'message_sent',
           properties: {
@@ -542,7 +545,7 @@ export class MessageProcessor extends ProcessorBase {
         job.data.session
       );
       if (job.data.trackingEmail) {
-        this.phClient.capture({
+        this.phClient?.capture({
           distinctId: job.data.trackingEmail,
           event: 'message_sent',
           properties: {

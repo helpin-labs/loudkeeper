@@ -41,9 +41,12 @@ export class MessageSender {
   private MAXIMUM_PUSH_LENGTH = 256;
   private MAXIMUM_PUSH_TITLE_LENGTH = 48;
   private tagEngine = new Liquid();
-  private phClient = new PostHog(process.env.POSTHOG_KEY, {
-    host: process.env.POSTHOG_HOST,
-  });
+  private phClient =
+    process.env.POSTHOG_KEY && process.env.POSTHOG_MESSAGE_COUNT !== 'false'
+      ? new PostHog(process.env.POSTHOG_KEY, {
+          host: process.env.POSTHOG_HOST,
+        })
+      : undefined;
   private messagesMap: Record<
     MessageType,
     (job: any) => Promise<ClickHouseMessage[] | void>
@@ -550,7 +553,7 @@ export class MessageSender {
     }
     if (trackingEmail) {
       if (process.env.POSTHOG_MESSAGE_COUNT !== 'false') {
-        this.phClient.capture({
+        this.phClient?.capture({
           distinctId: trackingEmail,
           event: 'message_sent',
           properties: {
@@ -664,7 +667,7 @@ export class MessageSender {
     ];
     if (trackingEmail) {
       if (process.env.POSTHOG_MESSAGE_COUNT !== 'false') {
-        this.phClient.capture({
+        this.phClient?.capture({
           distinctId: trackingEmail,
           event: 'message_sent',
           properties: {
@@ -859,7 +862,7 @@ export class MessageSender {
       );
       if (trackingEmail) {
         if (process.env.POSTHOG_MESSAGE_COUNT !== 'false') {
-          this.phClient.capture({
+          this.phClient?.capture({
             distinctId: trackingEmail,
             event: 'message_sent',
             properties: {
@@ -1081,7 +1084,7 @@ export class MessageSender {
       );
       if (trackingEmail) {
         if (process.env.POSTHOG_MESSAGE_COUNT !== 'false') {
-          this.phClient.capture({
+          this.phClient?.capture({
             distinctId: trackingEmail,
             event: 'message_sent',
             properties: {

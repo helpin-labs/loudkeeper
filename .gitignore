@@ -171,6 +171,10 @@ cypress.env.json
 /data
 test-firebase-credentials.json
 
+# Plaintext staging secret used only as input to kubeseal
+/k8s/stage/secrets.local.yaml
+/k8s/stage/.secrets.local.yaml.sw?
+
 # grabage
 .DS_Store
 ormlogs.log

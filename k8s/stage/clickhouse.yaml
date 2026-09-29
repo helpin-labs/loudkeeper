@@ -1,0 +1,118 @@
+apiVersion: clickhouse.altinity.com/v1
+kind: ClickHouseInstallation
+metadata:
+  name: loudkeeper
+  namespace: loudkeeper
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  defaults:
+    templates:
+      podTemplate: clickhouse
+      dataVolumeClaimTemplate: clickhouse-data
+  configuration:
+    profiles:
+      default/allow_experimental_json_type: 1
+      default/date_time_input_format: best_effort
+      default/output_format_json_array_of_rows: 1
+    users:
+      loudkeeper/k8s_secret_password: loudkeeper-secrets/CLICKHOUSE_PASSWORD
+      loudkeeper/networks/ip: "::/0"
+      loudkeeper/profile: default
+      loudkeeper/grants/query:
+        - GRANT ALL ON *.*
+    clusters:
+      - name: main
+        layout:
+          shardsCount: 1
+          replicasCount: 1
+  templates:
+    podTemplates:
+      - name: clickhouse
+        spec:
+          nodeSelector:
+            node.hetzner.com/type: cloud
+          securityContext:
+            fsGroup: 101
+          initContainers:
+            - name: rabbitmq-config
+              image: busybox:1.37.0
+              command:
+                - sh
+                - -ec
+              args:
+                - |
+                  umask 077
+                  rabbitmq_username="$(printf '%s' "$RABBITMQ_USERNAME" | sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')"
+                  rabbitmq_password="$(printf '%s' "$RABBITMQ_PASSWORD" | sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')"
+                  cat > /generated-config/rabbitmq.xml <<EOF
+                  <clickhouse>
+                    <rabbitmq>
+                      <username>${rabbitmq_username}</username>
+                      <password>${rabbitmq_password}</password>
+                    </rabbitmq>
+                  </clickhouse>
+                  EOF
+              env:
+                - name: RABBITMQ_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: loudkeeper-secrets
+                      key: RABBITMQ_USERNAME
+                - name: RABBITMQ_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: loudkeeper-secrets
+                      key: RABBITMQ_PASSWORD
+              volumeMounts:
+                - name: rabbitmq-config
+                  mountPath: /generated-config
+          containers:
+            - name: clickhouse
+              image: clickhouse/clickhouse-server:26.3.17.110@sha256:2ef11bbe2e44ab7022f37ff3019b3f2125ed09e919ea6194660be6130b7ca4b7
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 1Gi
+                limits:
+                  cpu: "1"
+                  memory: 2Gi
+              volumeMounts:
+                - name: clickhouse-data
+                  mountPath: /var/lib/clickhouse
+                - name: rabbitmq-config
+                  mountPath: /etc/clickhouse-server/config.d/rabbitmq.xml
+                  subPath: rabbitmq.xml
+                  readOnly: true
+          volumes:
+            - name: rabbitmq-config
+              emptyDir: {}
+    volumeClaimTemplates:
+      - name: clickhouse-data
+        reclaimPolicy: Retain
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          storageClassName: hcloud-volumes-retain
+          resources:
+            requests:
+              storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+  namespace: loudkeeper
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  selector:
+    clickhouse.altinity.com/chi: loudkeeper
+    clickhouse.altinity.com/cluster: main
+  ports:
+    - name: http
+      port: 8123
+      targetPort: 8123
+    - name: native
+      port: 9000
+      targetPort: 9000

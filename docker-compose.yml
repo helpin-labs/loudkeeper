@@ -93,8 +93,6 @@ services:
     depends_on:
       clickhouse:
         condition: service_healthy
-      s3:
-        condition: service_healthy
     networks:
       - laudspeaker_default
     command:
@@ -119,24 +117,6 @@ services:
     networks:
       - laudspeaker_default
 
-  s3:
-    image: quay.io/minio/minio
-    command: "server /data --console-address :9123"
-    ports:
-      - "9123:9123"
-      - "9001:9000"
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    environment:
-      MINIO_ROOT_USER: test
-      MINIO_ROOT_PASSWORD: 12345678
-    container_name: s3
-    networks:
-      - laudspeaker_default
-
   laudspeaker-web:
     profiles:
       - "testing"
@@ -152,8 +132,6 @@ services:
       start_period: 60s
     depends_on:
       init-environment:
-        condition: service_completed_successfully
-      s3-createbuckets:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
@@ -206,21 +184,6 @@ services:
     networks:
       - laudspeaker_default
 
-  s3-createbuckets:
-    image: quay.io/minio/mc
-    depends_on:
-      s3:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -ec "
-      /usr/bin/mc alias set s3 http://s3:9000 test 12345678;
-      /usr/bin/mc mb --ignore-existing s3/$$AWS_S3_CUSTOMERS_IMPORT_BUCKET;
-      /usr/bin/mc mb --ignore-existing s3/$$AWS_S3_BUCKET;
-      "
-    env_file:
-      - ./local-env/env-docker-compose
-    networks:
-      - laudspeaker_default
   redis-gui:
     container_name: redis-gui
     image: redis/redisinsight:latest

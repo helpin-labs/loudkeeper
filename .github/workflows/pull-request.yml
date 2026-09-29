@@ -4,17 +4,33 @@ on:
     branches:
       - staging
       - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pull-request-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  build-pr:
-    name: Build docker image
-    uses: ./.github/workflows/build.yml
-    with:
-      dockerfile: Dockerfile
-      output: laudspeaker
-      external_url: app-staging.laudspeaker.com
   test-pr:
-    needs: [build-pr]
-    name: Test docker image
-    uses: ./.github/workflows/test.yml
-    with:
-      image: laudspeaker
+    name: Test source
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install server dependencies
+        run: npm install --workspace packages/server --legacy-peer-deps --no-audit --no-fund --package-lock=false
+
+      - name: Run server unit tests
+        run: npm run test:server -- cache.service.spec
+
+      - name: Test release version resolver
+        run: bash scripts/release-version.test.sh

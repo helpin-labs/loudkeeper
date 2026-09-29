@@ -8,20 +8,21 @@ export class QueueManager {
   static readonly queueOptions = {
     durable: true,
     arguments: {
-      maxPriority: 255
-    }
-  }
+      // RabbitMQ 4.3 quorum queues always support priorities in the 0-31
+      // range. Quorum queues replicate messages across the broker cluster;
+      // x-max-priority only applies to classic queues.
+      'x-queue-type': 'quorum',
+    },
+  };
 
   static async init() {
     await this.initConnection();
     await this.initQueues();
   }
 
-  static async assertQueue(
-    queue: QueueType,
-    destination: QueueDestination) {
+  static async assertQueue(queue: QueueType, destination: QueueDestination) {
     const channel = this.connectionMgr.channelObj;
-    
+
     const queueName = this.getQueueName(queue, destination);
     const options = this.getQueueOptions(queue, destination);
 
@@ -32,21 +33,19 @@ export class QueueManager {
     return this.connectionMgr.close();
   }
 
-  static getQueueName(
-    queue: QueueType,
-    destination: QueueDestination): string {
+  static getQueueName(queue: QueueType, destination: QueueDestination): string {
     return `${queue}.${destination}`;
   }
 
-  static getQueueOptions(
-    queue: QueueType,
-    destination: QueueDestination) {
+  static getQueueOptions(queue: QueueType, destination: QueueDestination) {
     const options: Record<string, any> = {
-      ...this.queueOptions
+      ...this.queueOptions,
     };
 
-    if (destination == QueueDestination.COMPLETED
-      || destination == QueueDestination.FAILED) {
+    if (
+      destination == QueueDestination.COMPLETED ||
+      destination == QueueDestination.FAILED
+    ) {
       options.maxLength = 500;
     }
 
@@ -54,7 +53,9 @@ export class QueueManager {
   }
 
   private static async initConnection() {
-    this.connectionMgr = await RMQConnectionManager.createConnectionAndChannel('QueueManager');
+    this.connectionMgr = await RMQConnectionManager.createConnectionAndChannel(
+      'QueueManager'
+    );
   }
 
   private static async initQueues() {

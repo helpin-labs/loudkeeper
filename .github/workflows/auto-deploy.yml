@@ -1,9 +1,8 @@
-name: Build, test, and deploy on commit
+name: Legacy production deployment
 on:
   push:
     branches:
       - production
-      - staging
 permissions:
   contents: read
   packages: write
