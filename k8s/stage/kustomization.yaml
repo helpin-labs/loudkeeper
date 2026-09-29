@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - config.yaml
+  - sealed-secret.yaml
   - redis.yaml
   - rabbitmq.yaml
   - postgresql.yaml
