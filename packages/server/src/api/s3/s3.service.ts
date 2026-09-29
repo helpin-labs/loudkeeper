@@ -14,9 +14,11 @@ export class S3Service {
   AWS_S3_BUCKET = process.env.AWS_S3_BUCKET;
   AWS_S3_BUCKET_REGION = process.env.AWS_S3_BUCKET_REGION;
   AWS_S3_CUSTOMERS_IMPORT_BUCKET = process.env.AWS_S3_CUSTOMERS_IMPORT_BUCKET;
+  AWS_S3_PUBLIC_URL = process.env.AWS_S3_PUBLIC_URL?.replace(/\/+$/, '');
   s3 = new AWS.S3({
     accessKeyId: process.env.AWS_S3_ACCESS_KEY,
     secretAccessKey: process.env.AWS_S3_KEY_SECRET,
+    region: this.AWS_S3_BUCKET_REGION,
     ...(process.env.MINIO_S3_URL
       ? {
           endpoint: process.env.MINIO_S3_URL,
@@ -93,18 +95,20 @@ export class S3Service {
     });
   }
 
-  async s3_upload(file, bucket, key, mimetype, ACL?: string) {
-    const params = {
+  async s3_upload(file, bucket, key, mimetype, ACL?: AWS.S3.ObjectCannedACL) {
+    const params: AWS.S3.PutObjectRequest = {
       Bucket: bucket,
       Key: key,
       Body: file,
-      ACL: ACL,
       ContentType: mimetype,
       ContentDisposition: 'inline',
-      CreateBucketConfiguration: {
-        LocationConstraint: this.AWS_S3_BUCKET_REGION,
-      },
     };
+
+    // R2 and some other S3-compatible providers reject ACL headers. Public
+    // access for those providers is configured on the bucket or custom domain.
+    if (ACL && !process.env.MINIO_S3_URL) {
+      params.ACL = ACL;
+    }
 
     try {
       this.logger.log(
@@ -113,7 +117,14 @@ export class S3Service {
       const s3Response = await this.s3.upload(params).promise();
       this.logger.log('File uploaded');
 
-      return { url: s3Response.Location, key: s3Response.Key };
+      const publicUrl =
+        ACL && this.AWS_S3_PUBLIC_URL
+          ? `${this.AWS_S3_PUBLIC_URL}/${s3Response.Key.split('/')
+              .map(encodeURIComponent)
+              .join('/')}`
+          : s3Response.Location;
+
+      return { url: publicUrl, key: s3Response.Key };
     } catch (e) {
       this.logger.error(e);
       throw new HttpException('Error while trying to upload file.', 500);
