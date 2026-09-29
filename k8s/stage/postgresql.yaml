@@ -1,0 +1,40 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: loudkeeper-postgres
+  namespace: loudkeeper
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:18-standard-bookworm@sha256:2257decb7de100886c14262e646a6dc10b70057005dbc7cae4b6693282727e2b
+  bootstrap:
+    initdb:
+      database: loudkeeper
+      owner: loudkeeper
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
+        - "CREATE OR REPLACE FUNCTION uuid_generate_v7() RETURNS uuid LANGUAGE SQL VOLATILE PARALLEL SAFE AS 'SELECT uuidv7()'"
+  storage:
+    size: 10Gi
+    storageClass: hcloud-volumes-retain
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
+    nodeSelector:
+      node.hetzner.com/type: cloud
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: 128MB
+      work_mem: 4MB
+  monitoring:
+    enablePodMonitor: true

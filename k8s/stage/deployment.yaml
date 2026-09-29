@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: loudkeeper
   namespace: loudkeeper
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
   labels:
     app: loudkeeper
 spec:
@@ -20,17 +22,32 @@ spec:
     spec:
       nodeSelector:
         node.hetzner.com/type: cloud
+      initContainers:
+        - name: wait-for-data-services
+          image: busybox:1.37.0
+          command:
+            - sh
+            - -ec
+            - |
+              until nc -z loudkeeper-postgres-rw 5432; do sleep 2; done
+              until nc -z rabbitmq 5672; do sleep 2; done
+              until wget -qO- http://clickhouse:8123/ping | grep -q Ok; do sleep 2; done
       containers:
         - name: web
           image: ghcr.io/helpin-labs/loudkeeper
           envFrom:
-            - configMapRef:
-                name: loudkeeper-config
             - secretRef:
                 name: loudkeeper-secrets
+            - configMapRef:
+                name: loudkeeper-config
           env:
             - name: RUN_MIGRATIONS
               value: "true"
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loudkeeper-postgres-app
+                  key: password
           ports:
             - name: http
               containerPort: 8080
@@ -63,10 +80,16 @@ spec:
           image: ghcr.io/helpin-labs/loudkeeper
           args: ["queue"]
           envFrom:
-            - configMapRef:
-                name: loudkeeper-config
             - secretRef:
                 name: loudkeeper-secrets
+            - configMapRef:
+                name: loudkeeper-config
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loudkeeper-postgres-app
+                  key: password
           resources:
             requests:
               cpu: 100m
@@ -89,10 +112,16 @@ spec:
           image: ghcr.io/helpin-labs/loudkeeper
           args: ["cron"]
           envFrom:
-            - configMapRef:
-                name: loudkeeper-config
             - secretRef:
                 name: loudkeeper-secrets
+            - configMapRef:
+                name: loudkeeper-config
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loudkeeper-postgres-app
+                  key: password
           resources:
             requests:
               cpu: 100m

@@ -13,3 +13,17 @@ data:
   FRONTEND_URL: https://app.loudkeeper.ai
   WS_BASE_URL: https://app.loudkeeper.ai
   SENTRY_ENVIRONMENT_TAG: staging
+  DATABASE_HOST: loudkeeper-postgres-rw
+  DATABASE_NAME: loudkeeper
+  DATABASE_USER: loudkeeper
+  DATABASE_PORT: "5432"
+  DATABASE_SSL: "false"
+  DATABASE_MAX_CONNECTIONS: "50"
+  CLICKHOUSE_HOST: clickhouse:8123
+  CLICKHOUSE_USER: loudkeeper
+  CLICKHOUSE_DB: default
+  CH_MIGRATIONS_HOST: clickhouse
+  CH_MIGRATIONS_USER: loudkeeper
+  CH_MIGRATIONS_PORT: "8123"
+  CH_MIGRATIONS_DB: default
+  CH_MIGRATIONS_HOME: /app/packages/server/src/migrations/clickhouse

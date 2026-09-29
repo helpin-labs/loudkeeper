@@ -8,8 +8,8 @@ import { randomUUID } from 'crypto';
 export class Producer {
   private static connectionMgr: RMQConnectionManager;
   private static publishOptions = {
-    persistent: true
-  }
+    persistent: true,
+  };
 
   static init(connectionMgr: RMQConnectionManager) {
     Producer.connectionMgr = connectionMgr;
@@ -22,21 +22,33 @@ export class Producer {
   private static async sendJobToQueue(
     queue: QueueType,
     destination: QueueDestination,
-    job: any) {
+    job: any
+  ) {
     const contents = Buffer.from(JSON.stringify(job));
     const queueName = QueueManager.getQueueName(queue, destination);
     const options = {
       ...this.publishOptions,
-      priority: job.metadata?.priority
-    }
+      priority: job.metadata?.priority,
+    };
 
-    return this.connectionMgr.channelObj.sendToQueue(queueName, contents, options);
+    const channel = this.connectionMgr.channelObj;
+
+    return new Promise<void>((resolve, reject) => {
+      channel.sendToQueue(queueName, contents, options, (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve();
+      });
+    });
   }
 
   private static async publish(queue: QueueType, jobs: any[]) {
     const promises = [];
 
-    for(const job of jobs) {
+    for (const job of jobs) {
       promises.push(this.sendJobToQueue(queue, QueueDestination.PENDING, job));
     }
 
@@ -56,7 +68,7 @@ export class Producer {
   }
 
   private static getStepDepthFromBulkJobs(jobs: any[]): number {
-    let allStepDepths = new Set();
+    const allStepDepths = new Set();
     let stepDepth: number;
 
     for (const job of jobs) {
@@ -72,8 +84,8 @@ export class Producer {
     if (allStepDepths.size == 0) return 1;
 
     // get first value
-    let it = allStepDepths.values();
-    let first = it.next();
+    const it = allStepDepths.values();
+    const first = it.next();
     stepDepth = first.value;
 
     return stepDepth;
@@ -96,42 +108,35 @@ export class Producer {
    * @param batchSize
    * @returns
    */
-  private static getBulkJobPriority(stepDepth: number, batchSize: number): number[] {
+  private static getBulkJobPriority(
+    stepDepth: number,
+    batchSize: number
+  ): number[] {
     const priorities: number[] = [];
 
-    // RMQ min, max priority
-    const minJobPriority: number = 1;
-    const maxJobPriority: number = 255;
+    // RabbitMQ 4.3 quorum queues provide priorities in the 0-31 range.
+    const minJobPriority = 1;
+    const maxJobPriority = 31;
 
     // max number of steps a journey can take
-    const maxJourneyDepth: number = 50;
+    const maxJourneyDepth = 50;
 
     // upperbound to maxJourneyDepth
     stepDepth = Math.min(stepDepth, maxJourneyDepth);
 
-    // priorities will be [1, stepPriorityBlocks[, [stepPriorityBlocks, 2 * stepPriorityBlocks[, etc...
-    const stepPriorityBlocks: number = Math.floor(
-      maxJobPriority / maxJourneyDepth
+    // Map the 50 possible journey depths monotonically onto the 31 quorum
+    // queue priority levels. Several adjacent depths intentionally share a
+    // priority because the broker has fewer priority levels than journey
+    // depths.
+    const nextStepPriority = Math.max(
+      minJobPriority,
+      Math.min(
+        maxJobPriority,
+        Math.ceil((stepDepth * maxJobPriority) / maxJourneyDepth)
+      )
     );
 
-    let nextStepPriorityStart: number =
-      (stepDepth - 1) * stepPriorityBlocks + 1;
-    let nextStepPriorityEnd: number =
-      nextStepPriorityStart + stepPriorityBlocks - 1;
-
-    // ensure start and end are within bounds
-    nextStepPriorityStart = Math.max(nextStepPriorityStart, minJobPriority);
-    nextStepPriorityEnd = Math.min(nextStepPriorityEnd, maxJobPriority);
-
-    let nextStepPriority;
-
-    // get a random number between nextStepPriorityStart and nextStepPriorityEnd inclusive
     for (let i = 0; i < batchSize; i++) {
-      nextStepPriority = Math.floor(
-        Math.random() * (nextStepPriorityEnd - nextStepPriorityStart + 1) +
-          nextStepPriorityStart
-      );
-
       priorities.push(nextStepPriority);
     }
 
@@ -153,7 +158,7 @@ export class Producer {
       [StepType.TRACKER]: null,
       [StepType.MULTISPLIT]: QueueType.MULTISPLIT_STEP,
       [StepType.EXPERIMENT]: QueueType.EXPERIMENT_STEP,
-    }
+    };
 
     return mapping[stepType];
   }
