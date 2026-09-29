@@ -13,10 +13,10 @@ spec:
   ingressClassName: pp-nginx
   tls:
     - hosts:
-        - app.loudkeeper.ai
-      secretName: cert-app-loudkeeper-ai
+        - app.useloudkeeper.com
+      secretName: cert-app-useloudkeeper-com
   rules:
-    - host: app.loudkeeper.ai
+    - host: app.useloudkeeper.com
       http:
         paths:
           - path: /

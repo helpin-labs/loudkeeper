@@ -81,7 +81,7 @@ jobs:
           file: Dockerfile
           push: true
           build-args: |
-            EXTERNAL_URL=app.loudkeeper.ai
+            EXTERNAL_URL=https://app.useloudkeeper.com
             SENTRY_RELEASE=${{ github.sha }}
           labels: org.opencontainers.image.source=https://github.com/helpin-labs/loudkeeper
           tags: ${{ env.IMAGE }}:sha-${{ github.sha }}

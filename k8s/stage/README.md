@@ -69,6 +69,6 @@ RabbitMQ credentials should use URL-safe characters because
 different Kubernetes worker nodes because hard pod anti-affinity protects the
 quorum during a node failure.
 
-The public staging endpoint is `https://app.loudkeeper.ai`. Its DNS record must
+The public staging endpoint is `https://app.useloudkeeper.com`. Its DNS record must
 point at the staging ingress. Cert-manager provisions the namespace-local TLS
 secret through the `letsencrypt-prod` ClusterIssuer.

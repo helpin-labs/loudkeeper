@@ -9,9 +9,9 @@ data:
   ENVIRONMENT: staging
   SERVE_CLIENT_FROM_NEST: "true"
   CLIENT_PATH: /app/client
-  API_BASE_URL: https://app.loudkeeper.ai/api
-  FRONTEND_URL: https://app.loudkeeper.ai
-  WS_BASE_URL: https://app.loudkeeper.ai
+  API_BASE_URL: https://app.useloudkeeper.com/api
+  FRONTEND_URL: https://app.useloudkeeper.com
+  WS_BASE_URL: https://app.useloudkeeper.com
   SENTRY_ENVIRONMENT_TAG: staging
   JWT_EXPIRES: 365d
   DATABASE_HOST: loudkeeper-postgres-rw
