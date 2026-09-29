@@ -22,7 +22,7 @@ data:
   DATABASE_MAX_CONNECTIONS: "50"
   REDIS_HOST: redis
   REDIS_PORT: "6379"
-  POSTHOG_HOST: https://app.posthog.com
+  POSTHOG_MESSAGE_COUNT: "false"
   CLICKHOUSE_HOST: clickhouse:8123
   CLICKHOUSE_USER: loudkeeper
   CLICKHOUSE_DB: default

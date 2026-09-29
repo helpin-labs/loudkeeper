@@ -30,7 +30,6 @@ in `env-server-example` and `local-env/env-docker-compose`, including:
   `rabbitmq:5672` service address
 - `CLICKHOUSE_PASSWORD`
 - `JWT_KEY`
-- `POSTHOG_KEY`
 - `AWS_S3_BUCKET`, `AWS_S3_CUSTOMERS_IMPORT_BUCKET`, `AWS_S3_BUCKET_REGION`,
   `AWS_S3_ACCESS_KEY`, and `AWS_S3_KEY_SECRET`
 - `MINIO_S3_URL` only when using a non-AWS S3-compatible provider
