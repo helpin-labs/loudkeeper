@@ -1,6 +1,6 @@
 # To build: docker build -f Dockerfile -t laudspeaker:local .
 # To run: docker run -it -p 80:80 --env-file packages/server/.env --rm laudspeaker:local
-FROM node:20 as frontend_build
+FROM node:20 AS frontend_build
 ARG EXTERNAL_URL
 ARG FRONTEND_SENTRY_DSN_URL=https://2444369e8e13b39377ba90663ae552d1@o4506038702964736.ingest.sentry.io/4506038705192960
 ENV NODE_OPTIONS=--max-old-space-size=4096
@@ -10,24 +10,26 @@ WORKDIR /app
 COPY ./packages/client/package.json /app/
 COPY ./package-lock.json /app/
 RUN npm install --legacy-peer-deps
-COPY . /app
+COPY ./package.json /app/package.json
+COPY ./packages/client /app/packages/client
 RUN npm run format:client
 RUN npm run build:client
 RUN echo "Skipping authenticated frontend sourcemap upload"
 
-FROM node:20 as backend_build
+FROM node:20 AS backend_build
 WORKDIR /app
 COPY ./package.json ./package-lock.json /app/
 COPY ./packages/client/package.json /app/packages/client/package.json
 COPY ./packages/server/package.json /app/packages/server/package.json
 COPY ./packages/tests/package.json /app/packages/tests/package.json
 RUN npm ci --legacy-peer-deps
-COPY . /app
+COPY ./packages/server /app/packages/server
 RUN npm run build:server
 RUN echo "Skipping authenticated backend sourcemap upload"
-RUN ./node_modules/.bin/sentry-cli releases propose-version > /app/SENTRY_RELEASE
+ARG SENTRY_RELEASE=unknown
+RUN printf '%s\n' "$SENTRY_RELEASE" > /app/SENTRY_RELEASE
 
-FROM node:20 As final
+FROM node:20 AS final
 # Env vars
 ARG EXTERNAL_URL
 ARG BACKEND_SENTRY_DSN_URL=https://15c7f142467b67973258e7cfaf814500@o4506038702964736.ingest.sentry.io/4506040630640640
@@ -36,7 +38,7 @@ ENV NODE_ENV=production
 ENV ENVIRONMENT=production
 ENV SERVE_CLIENT_FROM_NEST=true
 ENV CLIENT_PATH=/app/client
-ENV PATH /app/node_modules/.bin:$PATH
+ENV PATH=/app/node_modules/.bin:$PATH
 ENV NODE_PATH=/app/packages/server/node_modules
 ENV FRONTEND_URL=${EXTERNAL_URL}
 ENV POSTHOG_HOST=https://app.posthog.com
@@ -51,7 +53,7 @@ COPY ./packages/server/package.json /app
 COPY --from=frontend_build /app/packages/client/build /app/client
 COPY --from=backend_build /app/packages/server/dist /app/dist
 COPY --from=backend_build /app/node_modules /app/node_modules
-COPY --from=backend_build /app/packages /app/packages
+COPY --from=backend_build /app/packages/server /app/packages/server
 COPY --from=backend_build /app/SENTRY_RELEASE /app/
 COPY ./scripts /app/scripts/
 

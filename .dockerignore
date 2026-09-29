@@ -1,3 +1,8 @@
 **/node_modules/
+.git/
 .github/
+.agents/
+.codex/
+**/dist/
+packages/client/build/
 kafkaconnect/

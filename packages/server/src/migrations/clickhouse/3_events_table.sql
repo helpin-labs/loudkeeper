@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS events_pg_sync (
   -- rabbitmq_exchange_type = 'direct',
   rabbitmq_format = 'JSONEachRow',
   rabbitmq_persistent = 1,
-  rabbitmq_queue_settings_list = 'x-queue-type=quorum',
+  rabbitmq_queue_consume  = 1,
   rabbitmq_max_rows_per_message = 100,
   rabbitmq_routing_key_list = 'events_pg_sync.pending', 
   rabbitmq_queue_base = 'events_pg_sync.pending';

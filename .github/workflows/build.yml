@@ -46,6 +46,7 @@ jobs:
           outputs: type=docker,dest=/tmp/${{ inputs.output }}.tar
           build-args: |
             EXTERNAL_URL=${{ inputs.external_url }}
+            SENTRY_RELEASE=${{ github.sha }}
           cache-from: type=gha,scope=${{ inputs.output }}
           cache-to: type=gha,mode=max,scope=${{ inputs.output }}
       - name: Build and publish
@@ -58,6 +59,7 @@ jobs:
           push: true
           build-args: |
             EXTERNAL_URL=${{ inputs.external_url }}
+            SENTRY_RELEASE=${{ github.sha }}
           cache-from: type=gha,scope=${{ inputs.output }}
           cache-to: type=gha,mode=max,scope=${{ inputs.output }}
       - name: Upload artifact
