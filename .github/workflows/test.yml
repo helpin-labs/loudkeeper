@@ -35,8 +35,19 @@ jobs:
     - name: Setup environment
       run: |
         export LAUDSPEAKER_IMAGE="${{ inputs.image }}"
-        trap 'docker compose --profile testing ps --all; docker compose --profile testing logs --tail=100' ERR
-        docker compose --profile testing up -d --quiet-pull
+        set +e
+        docker compose --profile testing up -d --quiet-pull 2>&1 | tee /tmp/compose-up.log
+        compose_status=${PIPESTATUS[0]}
+        set -e
+
+        if (( compose_status != 0 )); then
+          compose_error=$(tail -n 10 /tmp/compose-up.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g')
+          echo "::error title=Docker Compose startup failed::$compose_error"
+          docker compose --profile testing ps --all || true
+          docker compose --profile testing logs --tail=100 || true
+          exit "$compose_status"
+        fi
+
         curl --fail --silent --show-error --output /dev/null --retry 30 --retry-delay 2 --retry-connrefused http://localhost:8080
     - name: Install unit test dependencies
       run: "npm install -w packages/server          \n"
@@ -51,11 +62,8 @@ jobs:
       run: |
         TESTS_BASE_URL=http://localhost:8080 TESTS_API_BASE_URL=http://localhost:8080/api TESTS_INTERNAL_API_BASE_URL=http://laudspeaker-web:8080/api npm run tests:run 
     - name: Docker logs
-      run: docker logs laudspeaker-web
+      run: docker compose --profile testing logs --tail=100 || true
       if: always()
-    - name: Docker logs
-      run: docker logs -n 100 laudspeaker-web
-      if: always()  
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v4
       if: always()
