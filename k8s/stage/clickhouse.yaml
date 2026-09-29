@@ -22,7 +22,6 @@ spec:
     profiles:
       default/allow_experimental_json_type: 1
       default/date_time_input_format: best_effort
-      default/output_format_json_array_of_rows: 1
     users:
       loudkeeper/k8s_secret_password: loudkeeper-secrets/CLICKHOUSE_PASSWORD
       loudkeeper/networks/ip: "::/0"
