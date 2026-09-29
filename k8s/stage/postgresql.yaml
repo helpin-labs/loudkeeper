@@ -12,7 +12,7 @@ spec:
     initdb:
       database: loudkeeper
       owner: loudkeeper
-      postInitSQL:
+      postInitApplicationSQL:
         - CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
         - "CREATE OR REPLACE FUNCTION uuid_generate_v7() RETURNS uuid LANGUAGE SQL VOLATILE PARALLEL SAFE AS 'SELECT uuidv7()'"
   storage:
